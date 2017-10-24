@@ -192,9 +192,9 @@ void loadFile(char *p1, char *buff) //Loads a files ITS ASSEMBLE :-(
 	char line[500]; // String for each line in the Files "p1"
 	char *token; 	// Created for STRTOK
 	int startingAddress, addressCounter;
-	char *symbols[500];
+	const char *symbols[500]; //Keep track of labels
 	//Opening READ only FILES
-	source = fopen("Source.txt", "r");
+	source = fopen(p1, "r");
 	opcode = fopen("opcode.txt","r");
 	//Opening Write Files
 	intermediate = fopen("intermediate.txt","w");
@@ -212,7 +212,7 @@ void loadFile(char *p1, char *buff) //Loads a files ITS ASSEMBLE :-(
 	
 	char *pastToken; //Keep track of past tokens
 	token = line;	
-	int labelCounter = 0;
+	int labelCounter = 0; //Keep track of labelss
 	//Starts Reading from "p1"
 	while(fgets(line, 500, source))
 	{
@@ -230,8 +230,12 @@ void loadFile(char *p1, char *buff) //Loads a files ITS ASSEMBLE :-(
 		{
 			strcpy(tok.label, token); //Sets label
 			token = strtok(NULL, " \t\r\n\v\f"); // gets next word on the line
-			symbols[labelCounter] = malloc(strlen(tok.label) + 1);
-			strcpy(symbols[labelCounter], tok.label);
+
+			if(labelCounter < 500)
+			{
+				symbols[labelCounter] = tok.label;
+				labelCounter++;
+			}
 			strcpy(tok.mnemonic, token); //sets mnemonic
 			
 			token = strtok(NULL, " \t\r\n\v\f");
@@ -246,21 +250,20 @@ void loadFile(char *p1, char *buff) //Loads a files ITS ASSEMBLE :-(
 				addressCounter = startingAddress;
 				//printf("addressCounter %d\n", addressCounter);
 			}
+
 			if(strcmp(tok.mnemonic, "START") == 0|| strcmp(tok.mnemonic, "STL") == 0) addressCounter = startingAddress;
 			else addressCounter += 3;
+
+			//Checking for ERRORS
 			//======================================
-			//Checking LABEL ERROR
-			if(tok.label[0] != 'A' || tok.label[0] != 'Z') _ERROR = INVALID_LABEL;
-			else if(strcmp(tok.mnemonic, "END") == 0)
-			{
-				if(strcmp(tok.operand, symbols[1])); 
-			}
+			//Checking LABEL ERROR/
+			if(tok.label[0] < 'A' || tok.label[0] > 'Z') _ERROR = INVALID_LABEL;
 			//======================================
 
 			//======================================
 			//Checking if MNEMONIC is Wrong
 			
-			if( _ERROR != NOERROR)
+			if( _ERROR == NOERROR)
 			{
 				for(int x = 0; x < NUMELEM(Ops); ++x)
 				{
@@ -274,15 +277,21 @@ void loadFile(char *p1, char *buff) //Loads a files ITS ASSEMBLE :-(
 				else if(strcmp(tok.mnemonic, "RESB") == 0)  _Error = false;
 				else if(strcmp(tok.mnemonic, "RESW") == 0)  _Error = false;
 			}
+			if(_Error && _ERROR == NOERROR) _ERROR = INVALID_MNEMONIC;
 			//======================================
 			
 			//======================================
 			//Checking for Directives
-			if(tok.operand[0] != 'X' || tok.operand[0] != 'C' && _ERROR == NOERROR) _ERROR = INVALID_OPERAND;
-			//if(strcmp(tok.operand, symbols[1]) > 0 || strcmp(tok.operand, symbols[1]) < 0 && _ERROR == NOERROR) _ERROR = INVALID_OPERAND;
+			if(strcmp(tok.mnemonic, "BYTE") == 0 && _ERROR == NOERROR)
+			{
+				printf("%c\n", tok.operand[0]);
+				if(tok.operand[0] != 'X' || tok.operand[0] != 'C')
+					_ERROR = INVALID_OPERAND;
+			}
+			//if(strcmp(tok.mnemonic, "END") == 0 && strcmp(tok.operand, symbols[1]) > 0 || strcmp(tok.operand, symbols[1]) < 0 && _ERROR == NOERROR) _ERROR = INVALID_OPERAND;
 			if(strcmp(tok.mnemonic, "START") == 0)
 			{
-				for(int i = 0; i < strlen(tok.operand) + 1; ++i)
+				for(int i = 0; i < strlen(tok.operand); ++i)
 				{
 					if(!isdigit(tok.operand[i]))
 					{
