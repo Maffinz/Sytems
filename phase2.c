@@ -233,7 +233,22 @@ void loadFile(char *p1, char *buff) //Loads a files ITS ASSEMBLE :-(
 
 			if(labelCounter < 500)
 			{
-				symbols[labelCounter] = tok.label;
+				if(labelCounter > 0) //Loop throught the Symbol Tables looking for DUPLICATES
+				{
+					char str[250];
+					//Get a line
+					//START OF THE LOOP
+
+					//while(fgets(str, 250, symbolTable));
+					//{
+						//Break up the line and get the second line
+					//	pastToken = strtok(str, " \t\n");
+					//	pastToken = strtok(NULL, " \t\n"); //Gets the symbol
+					//	if(_ERROR != NOERROR) break;
+						//if(strcmp(pastToken, tok.label) == 0)
+						//	_ERROR = INVALID_LABEL;
+					//}//End of the loop
+				}
 				labelCounter++;
 			}
 			strcpy(tok.mnemonic, token); //sets mnemonic
@@ -284,9 +299,14 @@ void loadFile(char *p1, char *buff) //Loads a files ITS ASSEMBLE :-(
 			//Checking for Directives
 			if(strcmp(tok.mnemonic, "BYTE") == 0 && _ERROR == NOERROR)
 			{
-				printf("%c\n", tok.operand[0]);
-				if(tok.operand[0] != 'X' || tok.operand[0] != 'C')
-					_ERROR = INVALID_OPERAND;
+				//printf("%c\n", tok.operand[strlen(tok.operand) -1 ]);
+
+				if(tok.operand[0] != 'X' && tok.operand[0] != 'C') _ERROR = INVALID_OPERAND; //NOT A C or an X at the start of byte
+				//else
+				//{
+				//	if(tok.operand[0] == 'X')
+				//}
+				if(tok.operand[1] != '\'' ||  tok.operand[strlen(tok.operand)-1] != '\'') _ERROR = INVALID_OPERAND; //Missing ' at the start and the end '
 			}
 			//if(strcmp(tok.mnemonic, "END") == 0 && strcmp(tok.operand, symbols[1]) > 0 || strcmp(tok.operand, symbols[1]) < 0 && _ERROR == NOERROR) _ERROR = INVALID_OPERAND;
 			if(strcmp(tok.mnemonic, "START") == 0)
@@ -301,7 +321,9 @@ void loadFile(char *p1, char *buff) //Loads a files ITS ASSEMBLE :-(
 				}
 			}
 			//======================================
+			//PRINTING TO THE INTERMEDIATE
 			fprintf(intermediate, "%d\t %s\t %s\t %s\t %d\n", addressCounter, tok.label, tok.mnemonic, tok.operand, _ERROR);
+			fprintf(symbolTable, "%d\t %s\n", addressCounter, tok.label);
 		}
 		else
 		{
@@ -333,7 +355,6 @@ void loadFile(char *p1, char *buff) //Loads a files ITS ASSEMBLE :-(
 			//Write to File
 			fprintf(intermediate, "%d\t\t %s\t %s  \n", addressCounter, tok.mnemonic, tok.operand);
 		}
-		pastToken = tok.label;
 	}
 
 
